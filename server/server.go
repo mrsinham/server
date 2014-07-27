@@ -1,13 +1,27 @@
 package main
 
-import "net"
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"log"
+	"net"
+)
 
 /**
  *
  */
-func processRequest(sClientMessage string, oSocket *net.UDPConn, oClientAddress *net.UDPAddr) {
-	fmt.Println("message received from the client : " + sClientMessage)
+func listener(oConnection *net.TCPConn) {
+	// fmt.Println("message received from the client : " + sClientMessage)
+	oReader := bufio.NewReader(oConnection)
+	defer oConnection.Close()
+	aByts, oError := oReader.ReadBytes('\n')
+	if oError == io.EOF {
+		sMessage := string(aByts)
+		fmt.Println("received : " + sMessage)
+	} else {
+		fmt.Println("not ununderstable message")
+	}
 
 }
 
@@ -15,19 +29,26 @@ func processRequest(sClientMessage string, oSocket *net.UDPConn, oClientAddress 
  * program entrance
  */
 func main() {
-	oAddr, _ := net.ResolveUDPAddr("udp", ":31234")
-	oSocket, _ := net.ListenUDP("udp", oAddr)
-	fmt.Println("launching daemon")
+	oAddr, _ := net.ResolveTCPAddr("tcp", ":31234")
+	oSocket, oErr := net.ListenTCP("tcp", oAddr)
+
+	if oErr != nil {
+		panic("unable to start daemon " + oErr.Error())
+	}
+
+	log.Print("starting daemon")
+	defer oSocket.Close()
 
 	for {
-		buf := make([]byte, 1024)
+
 		// blocking method
-		iMessageLength, oClientAddress, err := oSocket.ReadFromUDP(buf)
+		oConnection, err := oSocket.AcceptTCP()
 		if err != nil {
-			fmt.Println(err)
+			// fmt.Println(err)
+			panic("unable to start daemon " + err.Error())
 		}
-		sClientMessage := string(buf[0:iMessageLength])
-		go processRequest(sClientMessage, oSocket, oClientAddress)
+
+		go listener(oConnection)
 	}
 
 }

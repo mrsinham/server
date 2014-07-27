@@ -1,22 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"net"
-	"time"
+	// "strconv"
+	//"time"
 )
 
 func main() {
-	iLimit := 1000000
-	oAddr, _ := net.ResolveUDPAddr("udp", "localhost:31234")
-	oConn, _ := net.DialUDP("udp", nil, oAddr)
+	// iLimit := 1000000
+	oAddr, _ := net.ResolveTCPAddr("tcp", "localhost:31234")
+	oConn, _ := net.DialTCP("tcp", nil, oAddr)
 
-	for i := 0; i < iLimit; i++ {
+	// for i := 0; i < iLimit; i++ {
 
-		sStr := "test" + string(i)
-		oByteStr := []byte(sStr)
-		oConn.Write(oByteStr)
+	sStr := "askpicture"
 
-		time.Sleep(time.Duration(200) * time.Microsecond)
-	}
+	fmt.Println("sending : " + sStr)
+	oByteStr := []byte(sStr)
+	oConn.Write(oByteStr)
+
 	oConn.Close()
+
 }
